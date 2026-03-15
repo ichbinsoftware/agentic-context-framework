@@ -11,105 +11,68 @@ status: proposed
 
 # Title of Change
 
-## 1. Summary (What Changed)
+## 1. Summary
 
-Brief high-level description of the change.
+What changed, in under 30 seconds.
 
--   Introduced ...
--   Modified ...
--   Removed ...
+- Introduced ...
+- Modified ...
+- Removed ...
 
-Keep this readable in under 30 seconds.
+---
 
-------------------------------------------------------------------------
+## 2. Motivation
 
-## 2. Motivation (Why)
+Why this change was needed. State goals and non-goals.
 
-What problem were we solving?
+**Goals:**
+-
 
--   Pain points
--   Business drivers
--   Technical debt
--   Performance issues
--   Security concerns
--   Scalability needs
+**Non-goals:**
+-
 
-Clearly state:
-- Goals
-- Non-goals
+---
 
-------------------------------------------------------------------------
+## 3. Approach
 
-## 3. Approach (What It Entails)
+What we did and what we rejected.
 
-Describe the solution.
+### Solution
 
--   Architecture decisions
--   Key implementation details
--   New abstractions
--   Data flow changes
--   Dependency changes
+Describe the chosen approach: architecture decisions, key implementation details, data flow or dependency changes.
 
 ### Alternatives Considered
 
-Briefly list:
-- Option A (why rejected)
-- Option B (trade-offs)
+- **Option A** — why rejected
+- **Option B** — why rejected
 
-------------------------------------------------------------------------
+---
 
-## 4. Impact / Blast Radius
+## 4. Impact
 
-What parts of the system are affected?
+What parts of the system are affected? Include only the categories that apply — skip the rest.
 
-### Components / Services
+- **Components:** ...
+- **Data / migrations:** ...
+- **APIs / contracts:** ...
+- **Security:** ...
+- **Performance:** ...
+- **Observability:** ...
+- **Risks / tradeoffs:** ...
 
-### Data Model / Migrations
+---
 
-### APIs / Contracts
+## 5. Rollout
 
-### Security Considerations
+How is this introduced safely? How do we revert if it fails?
 
-### Performance Considerations
+- **Deploy strategy:** ...
+- **Backward compatible:** yes / no
+- **Rollback:** ...
+- **Follow-ups:** ...
 
-### Observability / Logging / Alerts
-
-------------------------------------------------------------------------
-
-## 5. Rollout & Operations
-
-How is this introduced safely?
-
--   Feature flags?
--   Phased rollout?
--   Backward compatibility?
--   Migration strategy?
-
-### Rollback Plan
-
-If something fails, how do we revert safely?
-
-------------------------------------------------------------------------
-
-## 6. Risks & Tradeoffs
-
-Be explicit.
-
--   Added complexity?
--   Lock-in?
--   Performance cost?
--   Future constraints?
-
-------------------------------------------------------------------------
-
-## 7. Follow-ups / Future Work
-
--   
--   
--   
-
-------------------------------------------------------------------------
-
-## 8. Notes
-
-Anything else relevant for future readers.
+---
+> **Created by:** model-id-or-author-name
+> **Created:** YYYY-MM-DD
+> **Updated by:** model-id-or-author-name
+> **Updated:** YYYY-MM-DD

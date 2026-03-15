@@ -35,3 +35,27 @@ In practice, a fresh session with the same model eliminates confirmation bias �
 Architectural drift is a slow process. Stages 1–4 are not re-run — Stage 5 is the only maintenance path. The framework provides this stage but has no automated trigger. If Stage 5 isn't wired into a recurring workflow, docs will quietly fall behind the codebase and erode trust in the context layer.
 
 **What this means in practice:** Schedule it explicitly — after significant sprints or releases is a good default. A CI scheduled job, a recurring calendar reminder, or a sprint ritual all work. Do not rely on memory. An undocumented codebase is recoverable; a documentation layer that confidently describes the wrong system is worse than nothing.
+
+**Example: GitHub Actions reminder**
+
+```yaml
+# .github/workflows/acf-stage5-reminder.yml
+name: ACF Stage 5 Reminder
+on:
+  schedule:
+    - cron: '0 9 1 */2 *'  # 9am on the 1st of every 2nd month
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'ACF Stage 5: Check for architectural drift',
+              body: 'Scheduled reminder to run `Stage 5: Update` and check for documentation drift.\n\nRun this in your AI tool: `@acf-context-agent Run Stage 5: Update`',
+              labels: ['documentation']
+            });
+```

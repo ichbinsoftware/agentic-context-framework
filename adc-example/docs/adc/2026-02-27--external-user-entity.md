@@ -9,7 +9,7 @@ status: implemented
 
 # External User Entity and Service
 
-## 1. Summary (What Changed)
+## 1. Summary
 
 Introduced support for users authenticated via external identity providers.
 
@@ -23,18 +23,17 @@ Introduced support for users authenticated via external identity providers.
 
 ---
 
-## 2. Motivation (Why)
+## 2. Motivation
 
-### Problem
 The existing `UserEntity` only supports internal authentication. Integration with external identity providers (OAuth, SAML, etc.) requires tracking external system identifiers alongside internal user records.
 
-### Goals
+**Goals:**
 - Enable lookup of users by external identity provider ID
 - Maintain parity with existing `UserEntity` structure
 - Support future external authentication flows
 - Follow established architecture patterns
 
-### Non-goals
+**Non-goals:**
 - Implementing actual OAuth/SAML authentication flows (auth logic)
 - Modifying existing `UserEntity` or `UserService`
 - Cross-service authentication coordination
@@ -42,26 +41,13 @@ The existing `UserEntity` only supports internal authentication. Integration wit
 
 ---
 
-## 3. Approach (What It Entails)
+## 3. Approach
 
-### Architecture Decisions
+### Solution
 
-**Separate Entity vs. Extension**
-- Created new `ExternalUserEntity` rather than adding `ExternalId` to `UserEntity`
-- Rationale: Keeps external auth concerns isolated, avoids migration of the existing `users` table
+Created a new `ExternalUserEntity` rather than extending `UserEntity`, keeping external auth concerns isolated and avoiding migration of the existing `users` table. The entity mirrors `UserEntity` with an additional `ExternalId` field.
 
-**Mirror UserEntity Structure**
-- Copied all fields from `UserEntity` to maintain consistency
-- Preserved existing foreign key relationships
-- Applied identical ORM configurations
-
-**Service Pattern**
-- Extends `BaseService` (standard pattern)
-- Uses direct ORM queries with `ProjectTo<T>()` for efficient mapping
-- Filters disabled users automatically
-- Accepts `CancellationToken` on all async methods
-
-### Key Implementation Details
+The service extends `BaseService`, uses `ProjectTo<T>()` for efficient mapping, filters disabled users automatically, and accepts `CancellationToken` on all async methods.
 
 ```
 ExampleApp.Data
@@ -77,203 +63,41 @@ ExampleApp.Services
   └── ExternalUserService.cs (GetUserByExternalIdAsync, GetUserByUserIdAsync)
 ```
 
-**Entity Configuration:**
-- Table: `external_users`
-- Primary Key: `user_id`
-- New field: `external_id` (varchar 255)
-- Same column mappings as `users` table
+Entity configuration: table `external_users`, primary key `user_id`, new field `external_id` (varchar 255).
 
 ### Alternatives Considered
 
-**Option A: Extend UserEntity with nullable ExternalId**
-- Rejected: Would require schema migration on heavily-used `users` table
-- Rejected: Mixes internal and external authentication concerns
-
-**Option B: Junction table linking UserEntity to external IDs**
-- Rejected: Additional join complexity for every lookup
-- Rejected: Over-engineering for current requirements
-
-**Option C: Store external ID in an existing field**
-- Rejected: Data integrity issues, no proper indexing
+- **Extend UserEntity with nullable ExternalId** — rejected: requires schema migration on heavily-used `users` table, mixes internal and external auth concerns
+- **Junction table linking UserEntity to external IDs** — rejected: additional join complexity, over-engineering for current requirements
+- **Store external ID in an existing field** — rejected: data integrity issues, no proper indexing
 
 ---
 
-## 4. Impact / Blast Radius
+## 4. Impact
 
-### Components / Services
-
-**Affected:**
-- `ExampleApp.Data` — new entity
-- `ExampleApp.Models` — new model
-- `ExampleApp.Setup` — mapper profile addition
-- `ExampleApp.Services` — new service
-- `ExampleApp.Tests` — new test class
-
-**Not Affected:**
-- Existing `UserEntity` and `UserService` (unchanged)
-- API controllers (no endpoints created yet)
-- Authentication pipeline (`ExampleApp.Auth`)
-- Cross-service communication
-
-### Data Model / Migrations
-
-**Database Requirements:**
-- Assumes `external_users` table exists with schema matching `users` table + `external_id` column
-- No automatic migration provided
-- DBA must create table manually before deployment
-
-**Schema:**
-```sql
--- Assumed structure (not created by this change)
-CREATE TABLE external_users (
-    user_id     VARCHAR(50) PRIMARY KEY,
-    external_id VARCHAR(255),
-    -- ... all other columns from users table
-)
-```
-
-### APIs / Contracts
-
-**No API endpoints created** — service layer only.
-
-Consuming APIs must:
-- Register `ExternalUserService` in DI container
-- Create controller endpoints if external user access is needed
-- Apply appropriate authorisation policies
-
-### Security Considerations
-
-- External ID field is not encrypted (assumes external provider handles security)
-- Disabled user filtering prevents access to inactive accounts
-- No built-in rate limiting on external ID lookups
-- Assumes `external_id` is unique per external provider (not enforced at DB level)
-
-### Performance Considerations
-
-**Positive:**
-- ORM `ProjectTo<T>()` generates efficient SQL projections
-- Eager loading of related entities minimises N+1 queries
-
-**Potential Issues:**
-- `external_id` column should be indexed for lookup performance
-- No caching strategy implemented
-
-### Observability / Logging / Alerts
-
-- No custom logging added (relies on base service logging)
-- No metrics or telemetry for external user access
-- Consider adding:
-  - External ID lookup success/failure metrics
-  - Audit logging for external user authentication events
+- **Components:** `ExampleApp.Data` (new entity), `.Models` (new DTO), `.Setup` (mapper addition), `.Services` (new service), `.Tests` (new test class). Existing `UserEntity`, `UserService`, controllers, and auth pipeline are unchanged.
+- **Data / migrations:** Assumes `external_users` table exists with schema matching `users` + `external_id` column. No automatic migration — DBA must create table before deployment.
+- **APIs / contracts:** No endpoints created. Service layer only. Consumers must register `ExternalUserService` in DI and create controller endpoints if needed.
+- **Security:** External ID not encrypted (assumes provider handles security). Disabled user filtering prevents inactive account access. No uniqueness constraint on `external_id` (not enforced at DB level).
+- **Performance:** `ProjectTo<T>()` generates efficient SQL projections. `external_id` column should be indexed for lookup performance. No caching strategy implemented.
+- **Observability:** No custom logging (relies on base service). Consider adding external ID lookup metrics and audit logging.
+- **Risks / tradeoffs:** Database table must exist before deployment (coordination required). Duplication of `UserEntity` structure means schema changes require parallel updates. Multiple external providers may require a provider discriminator column in future.
 
 ---
 
-## 5. Rollout & Operations
+## 5. Rollout
 
-### Safe Introduction
-
-**Prerequisites:**
-1. DBA creates `external_users` table in target environments
-2. Index `external_id` column for performance
-3. Populate table with initial external user data (if migrating)
-
-**Deployment Steps:**
-1. Deploy code with new entity/service (no immediate impact)
-2. Register `ExternalUserService` in consuming API when needed
-3. Create API endpoints for external user access
-4. Configure external auth provider integration
-
-**Backward Compatibility:**
-- 100% backward compatible
-- No changes to existing `UserEntity` or `UserService`
-- Consuming code must explicitly opt-in by injecting `ExternalUserService`
-
-### Rollback Plan
-
-**If issues arise:**
-1. Remove `ExternalUserService` DI registration from consuming APIs
-2. Remove any controllers using `ExternalUserService`
-3. Redeploy without external user endpoints
-
-**Database rollback:**
-- `external_users` table can remain (no harm if unused)
-- Drop table if full rollback needed: `DROP TABLE external_users`
-
-**Code rollback:**
-- Revert commits affecting:
-  - `ExampleApp.Data/Entities/ExternalUserEntity.cs`
-  - `ExampleApp.Models/ExternalUserDto.cs`
-  - `ExampleApp.Services/ExternalUserService.cs`
-  - `ExampleApp.Setup/Mappers/EntityMappingProfile.cs`
+- **Deploy strategy:** (1) DBA creates `external_users` table and indexes `external_id`. (2) Deploy code — no immediate impact. (3) Register service in DI and create endpoints when ready. (4) Configure external auth provider integration.
+- **Backward compatible:** Yes. No changes to existing entities or services. Consumers opt-in by injecting `ExternalUserService`.
+- **Rollback:** Remove DI registration and controllers, redeploy. Table can remain (no harm if unused) or be dropped.
+- **Follow-ups:** Bulk lookup (`GetUsersByExternalIdsAsync`), unique constraint on `external_id`, ID format validation, caching, audit logging, `ExternalProviderId` column for multi-provider support, integration tests, API controller.
 
 ---
 
-## 6. Risks & Tradeoffs
-
-### Risks
-
-**Low Risk:**
-- Isolated new code, no changes to existing services
-- Follows established patterns (minimal learning curve)
-
-**Medium Risk:**
-- Database table must exist before code deployment (coordination required)
-- No uniqueness constraint on `external_id` (data integrity risk)
-- No validation of external ID format
-
-**Tradeoffs:**
-
-**Added Complexity:**
-- Additional entity/model/service to maintain
-- Duplication of `UserEntity` structure (schema changes require parallel updates)
-
-**No Lock-in:**
-- Standard ORM patterns, easy to refactor if needed
-
-**Future Constraints:**
-- Multiple external providers may require a provider discriminator column
+**Plan:** `docs/adc/plans/2026-02-27--external-user-entity-service.plan.md`
 
 ---
-
-## 7. Follow-ups / Future Work
-
-- Implement bulk lookup: `GetUsersByExternalIdsAsync(IEnumerable<string> externalIds)`
-- Add unique constraint on `external_id` column (database-level)
-- Add validation for external ID format
-- Implement caching strategy for frequently accessed external users
-- Add audit logging for external user access
-- Consider `ExternalProviderId` column to support multiple identity providers
-- Add integration tests against live database
-- Create API controller and endpoints if external user access is needed
-
----
-
-## 8. Notes
-
-**Entity Configuration:**
-- `ExternalId` property placed first for visibility
-- All column mappings copied from `UserEntity` to ensure consistency
-- `external_id` column max length set to 255 (standard for OAuth sub claims)
-
-**Mapper Profile:**
-- Mapping logic identical to `UserEntity → UserDto`
-- `Roles` property ignored (populated separately if needed)
-
-**Service Methods:**
-- `GetUserByExternalIdAsync`: Primary lookup by external provider ID
-- `GetUserByUserIdAsync`: Fallback lookup by internal user ID (for dual-mode users)
-
-**Related Code Reference:**
-```csharp
-// Context: ADC-2026-02-27--external-user-entity
-public async Task<ExternalUserDto> GetUserByExternalIdAsync(
-    string externalId,
-    CancellationToken cancellationToken)
-```
-
-**If schema differs from assumption, update `ExternalUserEntity.cs` mappings accordingly.**
-
----
-
-**Status:** Implemented (2026-02-27)
-**Plan File:** `docs/adc/plans/2026-02-27--external-user-entity-service.plan.md`
+> **Created by:** claude-sonnet-4-6
+> **Created:** 2026-02-27
+> **Updated by:** claude-sonnet-4-6
+> **Updated:** 2026-02-27
