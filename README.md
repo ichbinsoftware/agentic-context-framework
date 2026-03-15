@@ -48,7 +48,7 @@ You only need the folder for the tool(s) you use.
 
 **3. Follow the stages in order** (1–4) for initial setup.
 
-**4. After Stage 4 is complete**, copy the `docs/` folder from this repo into the root of your repo/project. This provides the ADC template and retrieval policy that agents and developers use when recording decisions going forward. (Merging into your existing `docs/` folder ensures the `adc/` path is correctly set for `AGENTS.md`).
+**4. After Stage 4 is complete**, copy `docs/adc/` from this repo into your project's `docs/` folder. This provides the ADC template (`_TEMPLATE.md`), plan template, and retrieval policy that agents and developers use when recording decisions going forward.
 
 **5. Schedule Stage 5** to keep docs current. Stage 5 is the only maintenance path — Stages 1–4 are not re-run. Treat it like a dependency update cycle: schedule it after significant sprints or releases rather than relying on memory. Wire it into your sprint cadence or CI schedule if possible.
 
@@ -84,7 +84,7 @@ Sequentially generates detailed documentation for every complex area identified 
 ### 4. Review
 `Run Stage 4: Review`
 
-Uses a different LLM model to audit the generated documentation against the actual codebase, identifying gaps, inconsistencies, or unverified claims.
+Audits the generated documentation against the actual codebase using a different model, identifying gaps, inconsistencies, or unverified claims. A model reviewing its own output exhibits confirmation bias — a different model brings genuine independence.
 
 ### 5. Update *(Maintenance)*
 `Run Stage 5: Update`
@@ -95,20 +95,16 @@ A recurring stage designed to be run weeks or months later. Scans for "architect
 
 ## 📋 Agent Decision Context (ADC)
 
-An ADC is the third pillar — and the one that separates a good context setup from a great one.
-
-Where architecture docs explain *what* the system is, ADCs explain *why* it is that way. They prevent the most expensive kind of rework: rebuilding something that was already tried and rejected, or undoing a decision that had good reasons behind it.
+Architecture docs explain *what* the system is. ADCs explain *why* it is that way — what changed, why, what was rejected, what it affects, and how to deploy and roll back safely.
 
 Each ADC has two parts:
 
-- **ADC Record** (`docs/adc/`) — the decision itself: "We chose X over Y because of Z." What changed, why it changed, what was rejected, and what the blast radius was.
-- **Execution Plan** (`docs/adc/plans/`) — the step-by-step implementation log tied to that decision. What was built, in what order, and what the pre-merge checklist looked like.
+- **ADC Record** (`docs/adc/`) — the decision and its context: motivation, approach, alternatives rejected, impact, and rollout.
+- **Execution Plan** (`docs/adc/plans/`) — optional step-by-step implementation sequence tied to that decision.
 
-Together they capture the intent behind code that isn't obvious from the code alone — the workarounds, the tradeoffs, the paths not taken.
+ADCs are referenced in code comments and PR descriptions. Agents only read them when explicitly needed — not by default.
 
-ADCs are referenced in code comments, PR descriptions, and other ADCs. Agents only read them when explicitly needed — not by default.
-
-See the included example for a real-world ADC and its corresponding plan:
+See the included example:
 - [`adc-example/docs/adc/2026-02-27--external-user-entity.md`](adc-example/docs/adc/2026-02-27--external-user-entity.md)
 - [`adc-example/docs/adc/plans/2026-02-27--external-user-entity-service.plan.md`](adc-example/docs/adc/plans/2026-02-27--external-user-entity-service.plan.md)
 
@@ -144,11 +140,11 @@ ACF is designed to be adopted incrementally. Start at Level 1 and progress as yo
 
 | Stakeholder | Benefit | Impact |
 | :--- | :--- | :--- |
-| **Developers** | Faster onboarding — read docs instead of reverse-engineering the codebase | Hours saved per week per developer |
-| **Developers** | Prevents regression — explicit "why we didn't do X" records | Eliminates re-litigation of settled decisions |
-| **Teams** | Clear boundaries and shared context — agents follow deterministic rules, not inferred patterns | Higher suggestion acceptance rate; less back-and-forth correction |
-| **Teams** | Reduced rework — violations caught early, decisions respected | Cheaper than post-review refactoring |
-| **Business** | Knowledge resilience — tribal knowledge becomes a documented asset | Survives personnel changes |
+| **Developers** | Faster onboarding — read docs instead of reverse-engineering the codebase | New developers and agents start contributing sooner |
+| **Developers** | Prevents regression — explicit "why we didn't do X" records | Settled decisions stay settled |
+| **Teams** | Clear boundaries and shared context — agents follow deterministic rules, not inferred patterns | Less back-and-forth correction on AI-generated code |
+| **Teams** | Reduced rework — violations caught early, decisions respected | Problems caught before review, not after |
+| **Business** | Knowledge resilience — tribal knowledge becomes a documented asset | New team members inherit the reasoning, not just the code |
 | **Business** | Lower AI costs and tool-agnostic investment — structured docs instead of full codebase scans | Fewer tokens per request; works with any AI tool now and in future |
 
 ---
@@ -190,24 +186,23 @@ It depends on how messy. Stage 1 infers architecture from what it can find. If t
 ### Existing Documentation
 
 **What if I already have an `AGENTS.md` or a `docs/` folder?**
-The `acf-context-agent` is designed to be opinionated and code-verified. It will prioritize its own generated structure to ensure the "Retrieval Discipline" and "ADC Policy" are correctly implemented. This often means Stage 2 will **overwrite** your existing `AGENTS.md`.
+The `acf-context-agent` is opinionated and code-verified. It generates its own structure to ensure the Retrieval Discipline and ADC Policy are correctly implemented. Stage 2 will **overwrite** your existing `AGENTS.md`.
 
 **How do I reconcile my existing documentation with ACF?**
-We recommend a "Reconciliation" approach:
 1. **Backup:** Rename your existing `AGENTS.md` to `AGENTS.legacy.md`.
 2. **Generate:** Run Stages 1–3 to let the agent produce its code-verified baseline.
 3. **Manual Merge:** Copy your specific tribal knowledge (that isn't inferable from code) into the new `AGENTS.md`.
-4. **Stage 4:** Use the Review stage to point the agent at your existing `docs/` folder to "ACF-ify" them (standardizing headers, adding ADC references, etc.).
+4. **Review:** Run Stage 4. It will catch gaps between the generated docs and the codebase — but it won't automatically incorporate your old docs. Any remaining knowledge from your legacy files needs to be merged manually.
 
 **Why doesn't the agent just append to my existing files?**
-To deliver maximum value, the framework must ensure the documentation is 100% verified against the current codebase. Appending often leads to "documentation debt" or stale instructions. Starting from a clean, code-verified generation ensures the context layer is accurate and useful for AI agents.
+The documentation must be verified against the current codebase. Appending leads to stale instructions. Starting from a clean, code-verified generation ensures the context layer is accurate.
 
 ---
 
 ### The Stages
 
 **Why do I need to switch models for Stage 4?**
-Independent verification. A model reviewing its own output exhibits confirmation bias — it validates what it wrote rather than challenges it. A different model — from a different provider or family — brings a genuinely fresh perspective and is more likely to catch inaccuracies or unverifiable claims. It's the AI equivalent of not proofreading your own work.
+A model reviewing its own output exhibits confirmation bias — it validates what it wrote rather than challenges it. A different model from a different provider brings genuine independence. At minimum, start a fresh session so the model has no prior context from Stages 1–3. See [LIMITATIONS.md](LIMITATIONS.md) for more detail.
 
 **Do I need to run all stages in one session?**
 No. Each stage is designed to stop and wait for your instruction. You can run them across multiple sessions.
@@ -227,7 +222,7 @@ A section generated in `AGENTS.md` during Stage 2 that tells AI agents exactly h
 ### ADCs
 
 **What's the difference between an ADC and an ADR?**
-An ADR captures a decision. An ADC captures the full context of a change — what changed, why, what was rejected, the blast radius, rollout considerations, and a step-by-step execution plan. ADCs are designed for both human maintainers and selective agent retrieval.
+An ADR captures a decision — what was decided, why, and the consequences. An ADC captures the full context of a change — the decision is one part, but it also includes impact, rollout, rollback, and an optional linked execution plan. ADRs are backward-looking ("what we decided"). ADCs are both backward and forward-looking ("what we decided + how to execute it safely"). They're designed for both humans and selective AI agent retrieval.
 
 **When should I create an ADC vs just writing a code comment?**
 Code comments explain implementation detail. ADCs explain architectural decisions — why this approach over another, what was rejected, what the wider impact is. If the decision only makes sense in the context of that function, a comment is enough. If it affects patterns, contracts, or future architectural choices, create an ADC.

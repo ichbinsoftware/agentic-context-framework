@@ -21,18 +21,12 @@ Brief description of what is being built and why.
 
 ---
 
-## Architecture & Layer Impact
-
-### Affected Components
+## Affected Components
 
 ```
 [Project/Module]
   └── path/to/File.ext    [NEW | MODIFY — describe change]
 ```
-
-### Architecture Rules Compliance
-
-List the key rules this change must satisfy (tick them off once verified).
 
 ---
 
@@ -42,18 +36,14 @@ List the key rules this change must satisfy (tick them off once verified).
 
 **File:** `path/to/File.ext`
 
-**Actions:**
 - What to create or change
 
 **Dependencies:** None
-
----
 
 ### 2. [Step name]
 
 **File:** `path/to/File.ext`
 
-**Actions:**
 - What to create or change
 
 **Dependencies:** Step 1
@@ -62,41 +52,4 @@ List the key rules this change must satisfy (tick them off once verified).
 
 ## Database / Infrastructure Considerations
 
-Note any schema changes, migrations, or infrastructure prerequisites.
-
----
-
-## Risk Assessment
-
-### Low Risk
--
-
-### Medium Risk
--
-
----
-
-## Testing Strategy
-
-1. **Unit Tests:**
-2. **Integration Tests:**
-3. **Manual Testing:**
-
----
-
-## Pre-Merge Checklist
-
-- [ ] Build passes
-- [ ] Unit tests pass
-- [ ] No secrets committed
-- [ ] ADC status updated to `implemented`
-
----
-
-## Execution Status
-
-**Status:** Planning complete, awaiting implementation approval
-
-**Next Steps:**
-1.
-2.
+Note any schema changes, migrations, or infrastructure prerequisites. Omit if not applicable.

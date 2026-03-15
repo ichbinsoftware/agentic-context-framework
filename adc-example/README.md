@@ -24,7 +24,7 @@ Key conventions in this codebase:
 
 ## What the Example Shows
 
-- [`docs/adc/2026-02-27--external-user-entity.md`](docs/adc/2026-02-27--external-user-entity.md) — An ADC record for adding `ExternalUserEntity` and `ExternalUserService` to support OAuth/SAML identity provider correlation. Demonstrates all 8 ADC sections including alternatives considered, blast radius, rollout plan, and risks.
+- [`docs/adc/2026-02-27--external-user-entity.md`](docs/adc/2026-02-27--external-user-entity.md) — An ADC record for adding `ExternalUserEntity` and `ExternalUserService` to support OAuth/SAML identity provider correlation. Demonstrates all 5 ADC sections: Summary, Motivation, Approach, Impact, and Rollout.
 
 - [`docs/adc/plans/2026-02-27--external-user-entity-service.plan.md`](docs/adc/plans/2026-02-27--external-user-entity-service.plan.md) — The matching execution plan with step-by-step implementation instructions, architecture compliance checklist, and pre-merge checklist.
 
