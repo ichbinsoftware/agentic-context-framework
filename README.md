@@ -4,11 +4,11 @@
 
 Organisations are investing heavily in AI coding tools and agentic DevOps workflows, but getting inconsistent results. The tools are powerful, but they're working blind.
 
-AI agents don't understand your architecture, your team's conventions, or why you made the decisions you made. Without this context, they generate code that compiles but doesn't fit — leading to rework, architectural drift, and eroded trust in the tooling.
+AI agents don't understand your architecture, your team's conventions, or why you made the decisions you made. Without this context, they generate code that works but doesn't fit — leading to rework, architectural drift, and eroded trust in the tooling.
 
 **The missing layer isn't better models. It's better context.**
 
-The Agentic Context Framework (ACF) is a structured approach to providing AI agents with the architectural knowledge, guardrails, and decision history they need to generate code that fits your system — not just code that compiles.
+The Agentic Context Framework (ACF) is a structured approach to providing AI agents with the architectural knowledge, guardrails, and decision history they need to generate code that fits your system — not just code that works.
 
 It treats agent context as a first-class engineering artefact: versioned in the repo, maintained alongside the code, and reviewed in every PR.
 
@@ -26,11 +26,13 @@ It treats agent context as a first-class engineering artefact: versioned in the 
 
 A 50-line architecture doc costs far fewer tokens than an agent scanning 20 source files to infer the same information.
 
+> 💡 **Tip:** Explore the [`adc-example/`](adc-example/README.md) directory to see what finished ACF documentation looks like for a real application.
+
 ---
 
 ## 🚀 Quick Start
 
-**1. Copy the agent file for your AI tool** into the **root of your repo/project**:
+**1. Copy the platform-specific directory** for your AI tool into the **root of your repo/project**:
 
 | Tool | Copy this folder |
 | :--- | :--- |
@@ -52,11 +54,23 @@ You only need the folder for the tool(s) you use.
 
 **5. Schedule Stage 5** to keep docs current. Stage 5 is the only maintenance path — Stages 1–4 are not re-run. Treat it like a dependency update cycle: schedule it after significant sprints or releases rather than relying on memory. Wire it into your sprint cadence or CI schedule if possible.
 
+> **ACF is a collaboration, not a generation-and-forget workflow.** Agents generate the baseline from code. Humans bring the context that code can't express — business constraints, tribal knowledge, regulatory requirements, and the reasoning behind legacy decisions. Review and enrich the generated docs at each stage before moving on.
+
 ---
 
 ## 🤖 The `acf-context-agent` Workflow
 
 The `acf-context-agent` automates the generation and maintenance of all three pillars through a 5-stage lifecycle:
+
+```mermaid
+graph TD
+    A[Stage 1: Onboard] --> B[Stage 2: Instructions]
+    B --> C[Stage 3: DeepDive]
+    C --> D[Stage 4: Review]
+    D --> E((Ready for Tasks))
+    E --- F[Stage 5: Update]
+    F -.->|Periodic Maintenance| E
+```
 
 | Platform | Invocation |
 | :--- | :--- |
@@ -134,6 +148,9 @@ ACF is designed to be adopted incrementally. Start at Level 1 and progress as yo
 | **2** | **Informed** | Instructions + Docs. Architecture docs provide the system map. Agents generate structurally correct code. Onboarding time drops for both humans and AI. |
 | **3** | **Trusted** | **Full ACF.** Instructions + Docs + ADC. Agents respect past decisions, follow patterns, and flag risk triggers. Rework drops. Autonomous agentic workflows become viable. |
 
+> **Pro-Tip:** Add an "ACF Check" to your project's PR template to ensure consistent context maintenance:
+> `- [ ] Does this change warrant an ADC? (See docs/adc/README.md)`
+
 ---
 
 ## 🎯 Benefits
@@ -180,6 +197,9 @@ Just one — the folder for the AI tool you use. The others can be ignored.
 
 **What if my codebase is messy — will Stage 1 still produce useful output?**
 It depends on how messy. Stage 1 infers architecture from what it can find. If the codebase has no coherent structure, the output will reflect that. See [LIMITATIONS.md](LIMITATIONS.md) for an honest assessment.
+
+**Stage 2 generated a pointer file (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.) — do I need it?**
+Stage 2 generates a pointer file to `AGENTS.md` as a safe default. If your AI tool already reads `AGENTS.md` directly, the pointer file is redundant and you can safely delete it. Check your tool's documentation to confirm which files it reads on startup. **When in doubt, keep the pointer file—it ensures the agent is correctly anchored to your repository's rules.**
 
 ---
 
