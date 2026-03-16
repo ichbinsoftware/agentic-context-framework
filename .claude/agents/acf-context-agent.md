@@ -404,7 +404,7 @@ After drafting the repo-specific steps, before writing them into AGENTS.md:
 ### Agent Decision Context Policy Section
 
 Include the following in AGENTS.md:
-   
+
 ```markdown
 ## Agent Decision Context Policy
 
