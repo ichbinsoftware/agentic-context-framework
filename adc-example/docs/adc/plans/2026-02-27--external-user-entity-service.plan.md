@@ -4,13 +4,21 @@
 
 **Date:** 2026-02-27
 **Feature:** Add ExternalUserEntity and ExternalUserService with external ID support
+**ADC:** [ADC-2026-02-27--external-user-entity](../2026-02-27--external-user-entity.md)
 **Status:** Implemented
+**Effort:** Medium
 
 ---
 
 ## Overview
 
 Add a new entity `ExternalUserEntity` that mirrors `UserEntity` with an additional `ExternalId` field, and a corresponding `ExternalUserService` that provides a `GetUserByExternalIdAsync` method for lookup by external system identifiers.
+
+### Out of Scope
+
+- Implementing actual OAuth/SAML authentication flows — this plan only adds the entity and service layer
+- Modifying existing `UserEntity` or `UserService`
+- Identity provider integration or cross-service authentication coordination
 
 ---
 
@@ -27,6 +35,17 @@ Add a new entity `ExternalUserEntity` that mirrors `UserEntity` with an addition
   - Implement `GetUserByExternalIdAsync(string externalId, CancellationToken cancellationToken)`
   - Use direct ORM queries
   - Return mapped DTO type
+
+---
+
+## Decisions, Constraints & Assumptions
+
+- **Separate entity over extending UserEntity:** Keeps external auth concerns isolated and avoids migrating the existing `users` table. Rejected: nullable `ExternalId` on `UserEntity`, junction table approach.
+
+### Assumptions
+
+- The `external_users` table already exists with all columns from `users` plus `external_id` (varchar 255), primary key `user_id`, and an index on `external_id`. If this assumption is wrong, a database migration script will be needed before deployment.
+- A single `external_id` column is sufficient — multi-provider support (requiring a provider discriminator column) is not needed yet.
 
 ---
 
@@ -143,8 +162,17 @@ ExampleApp.Tests
 
 ---
 
-## Database Migration Considerations
+## Verification
 
-This plan assumes the `external_users` table already exists with all columns from `users` plus `external_id` (varchar 255), primary key `user_id`, and an index on `external_id`.
+- [x] `ExternalUserService.GetUserByExternalIdAsync` returns a mapped DTO when a matching, non-disabled user exists
+- [x] Returns null when no matching user exists
+- [x] Disabled users are filtered out of results
+- [x] `CancellationToken` is passed through to all async calls
+- [x] `EntityMappingProfile` correctly maps `ExternalUserEntity` to `ExternalUserDto` with no unmapped members
+- [x] Service is registered as scoped in DI
 
-If the table does not exist, a database migration script will be needed (not part of this plan).
+---
+
+## Infrastructure Considerations
+
+The `external_users` table must exist before deployment with all columns from `users` plus `external_id` (varchar 255), primary key `user_id`, and an index on `external_id`. DBA must create the table — no automatic migration is included in this plan.

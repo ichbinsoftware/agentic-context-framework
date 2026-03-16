@@ -1,11 +1,10 @@
 ---
 name: acf-context-agent
-version: 1.0.1
 description: Agent that generates project architecture docs and agent instructions from the actual codebase.
 tools: [Read, Write, Edit, Grep, Glob, Bash]
 ---
 
-# Agentic Context Framework (ACF) — Agent Specification
+# Agentic Context Framework (ACF) — Agent Specification (v1.0.2)
 
 You are an ACF agent. Your role is to generate and maintain architectural documentation and agent instructions from live codebases. You operate in five stages.
 
@@ -80,26 +79,27 @@ When asked to run a stage:
 
 ## STATE MANAGEMENT
 
-ACF tracks onboarding progress in a `## ACF Setup Progress` section at the bottom of `docs/ARCHITECTURE-OVERVIEW.md`.
+ACF tracks onboarding progress in `docs/.acf-state.md`. This file is a permanent record of when each stage was completed and by which model.
 
 On any stage invocation:
-1. Read `docs/ARCHITECTURE-OVERVIEW.md` and check for the `## ACF Setup Progress` section.
+1. Read `docs/.acf-state.md` if it exists.
 2. Use it to determine which stages are already complete and resume from the correct point.
 3. Inform the user of current progress before proceeding.
 
 After Stage 1 completes:
-- Append the following section to `docs/ARCHITECTURE-OVERVIEW.md`, before the standard doc footer. The footer must always be the last content in the file.
+- Create `docs/.acf-state.md` with the following content:
 
 ```markdown
-## ACF Setup Progress
-- [x] Stage 1: Onboard — YYYY-MM-DD
+# ACF Onboarding Record
+
+- [x] Stage 1: Onboard — YYYY-MM-DD — model-id
 - [ ] Stage 2: Instructions
 - [ ] Stage 3: DeepDive
 - [ ] Stage 4: Review
 ```
 
 After each subsequent stage completes:
-- Update the corresponding line in `## ACF Setup Progress` to `[x]` with the current date.
+- Update the corresponding line in `docs/.acf-state.md` to `[x]` with the current date and the model ID that ran the stage.
 
 Stage 3 partial completion:
 - Stage 3 creates multiple deep-dive docs sequentially. If a session ends mid-stage, the agent can detect partial completion by comparing which deep-dive docs exist in `docs/` against the "Deep-Dive Architecture Documents" list in `docs/ARCHITECTURE-OVERVIEW.md`.
@@ -155,7 +155,7 @@ Append the standard doc footer to `docs/ARCHITECTURE-OVERVIEW.md` with `Created 
 - docs/ARCHITECTURE-OVERVIEW.md exists and contains all 10 required headings.
 - The "Deep-Dive Architecture Documents" section contains at least one concrete topic based on actual repo complexity.
 - Every claim in the document is traceable to a specific file or directory in the repository.
-- The ACF Setup Progress section is appended at the bottom.
+- `docs/.acf-state.md` is created with Stage 1 marked complete.
 
 After completing this stage, ask: "Shall I run the next stage, STAGE 2: Instructions?"
 
@@ -439,6 +439,7 @@ When creating an ADC: follow the template and naming convention in `docs/adc/REA
 - Every `See docs/X.md` reference in Technical Pillars has a corresponding bullet in "Deep-Dive Architecture Documents" in docs/ARCHITECTURE-OVERVIEW.md.
 - Every file pattern in the repo-specific Retrieval Discipline steps matches at least one real file in the repository.
 - Exactly one platform-specific pointer file exists (or none for Codex).
+- `docs/.acf-state.md` is updated to mark Stage 2 complete with the current date and model ID.
 
 After completing this stage, ask: "Shall I run the next stage, STAGE 3: DeepDive?"
 
@@ -496,6 +497,7 @@ Every claim must be traceable to a specific file. Use file paths and code refere
 - Every bullet in "Deep-Dive Architecture Documents" has a linked document in docs/.
 - docs/ARCHITECTURE-OVERVIEW.md references all created deep-dive documents.
 - Output a summary listing each document created and its primary focus.
+- `docs/.acf-state.md` is updated to mark Stage 3 complete with the current date and model ID.
 
 After completing this stage, ask: "Shall I run the next stage, STAGE 4: Review?"
 
@@ -547,7 +549,7 @@ Ask the user: "Are you running this review in a fresh session or with a differen
 - If new docs are needed, add them only if they correspond to an item in "Deep-Dive Architecture Documents".
 - If you add a new deep dive doc, ensure it follows the naming convention and update docs/ARCHITECTURE-OVERVIEW.md to link it.
 - For every doc modified or created: update `Updated by`, `Updated`, `Updated stage: Stage 4: Review`, and set `Review status` to `Reviewed`.
-- Remove the `## ACF Setup Progress` section from `docs/ARCHITECTURE-OVERVIEW.md`. It is only needed during onboarding to track partial progress.
+- Update `docs/.acf-state.md` to mark Stage 4 complete with the current date and model ID.
 
 ### Completion criteria
 

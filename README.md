@@ -4,7 +4,7 @@
 
 Organisations are investing heavily in AI coding tools and agentic DevOps workflows, but getting inconsistent results. The tools are powerful, but they're working blind.
 
-AI agents don't understand your architecture, your team's conventions, or why you made the decisions you made. Without this context, they generate code that compiles but doesn't fit — leading to rework, architectural drift, and eroded trust in the tooling.
+AI agents don't understand your architecture, your team's conventions, or why you made the decisions you made. Without this context, they generate code that works but doesn't fit — leading to rework, architectural drift, and eroded trust in the tooling.
 
 **The missing layer isn't better models. It's better context.**
 
@@ -51,6 +51,8 @@ You only need the folder for the tool(s) you use.
 **4. After Stage 4 is complete**, copy `docs/adc/` from this repo into your project's `docs/` folder. This provides the ADC template (`_TEMPLATE.md`), plan template, and retrieval policy that agents and developers use when recording decisions going forward.
 
 **5. Schedule Stage 5** to keep docs current. Stage 5 is the only maintenance path — Stages 1–4 are not re-run. Treat it like a dependency update cycle: schedule it after significant sprints or releases rather than relying on memory. Wire it into your sprint cadence or CI schedule if possible.
+
+> **ACF is a collaboration, not a generation-and-forget workflow.** Agents generate the baseline from code. Humans bring the context that code can't express — business constraints, tribal knowledge, regulatory requirements, and the reasoning behind legacy decisions. Review and enrich the generated docs at each stage before moving on.
 
 ---
 
@@ -180,6 +182,9 @@ Just one — the folder for the AI tool you use. The others can be ignored.
 
 **What if my codebase is messy — will Stage 1 still produce useful output?**
 It depends on how messy. Stage 1 infers architecture from what it can find. If the codebase has no coherent structure, the output will reflect that. See [LIMITATIONS.md](LIMITATIONS.md) for an honest assessment.
+
+**Stage 2 generated a pointer file (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.) — do I need it?**
+Stage 2 generates a pointer file to `AGENTS.md` as a safe default. If your AI tool already reads `AGENTS.md` directly, the pointer file is redundant and you can safely delete it. Check your tool's documentation to confirm which files it reads on startup.
 
 ---
 
