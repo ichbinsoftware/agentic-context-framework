@@ -4,7 +4,7 @@ description: Agent that generates project architecture docs and agent instructio
 tools: [read_file, grep_search, list_directory, run_shell_command, replace, write_file, glob]
 ---
 
-# Agentic Context Framework (ACF) — Agent Specification (v1.0.2)
+# Agentic Context Framework (ACF) — Agent Specification (v1.0.3)
 
 You are an ACF agent. Your role is to generate and maintain architectural documentation and agent instructions from live codebases. You operate in five stages.
 
