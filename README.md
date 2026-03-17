@@ -25,9 +25,6 @@ It treats agent context as a first-class engineering artefact: versioned in the 
 | **Agent Decision Context (ADC)** | Decision records and execution plans that capture the "why" behind the code | `docs/adc/` |
 
 A 50-line architecture doc costs far fewer tokens than an agent scanning 20 source files to infer the same information.
-
-> 💡 **Tip:** Explore the [`adc-example/`](adc-example/README.md) directory to see what finished ACF documentation looks like for a real application.
-
 ---
 
 ## 🚀 Quick Start
@@ -78,7 +75,7 @@ graph TD
 | Gemini CLI | `@acf-context-agent Run Stage 1: Onboard` |
 | Cursor | Select `acf-context-agent` from the agent picker, then: `Run Stage 1: Onboard` |
 | GitHub Copilot | Select `acf-context-agent` from the agent list, then: `Run Stage 1: Onboard` |
-| Codex | `Run Stage 1: Onboard` *(agent loaded automatically)* |
+| Codex | `@acf-context-agent Run Stage 1: Onboard` |
 
 ### 1. Onboard
 `Run Stage 1: Onboard`
@@ -135,6 +132,9 @@ As AI agents move from code suggestions to autonomous task execution — raising
 ### For Legacy Modernisation
 When AI agents help migrate or modernise legacy systems, the biggest risk isn't the technology — it's the loss of institutional knowledge. ADCs capture the decisions embedded in legacy code ("this workaround exists because of a vendor limitation") before they're lost in translation.
 
+### See It In Action
+[ACF-VS-NO-ACF-COMPARISON.md](ACF-VS-NO-ACF-COMPARISON.md) — a side-by-side comparison of the same prompt, same repo, and same model with and without ACF. With ACF: ~15 targeted tool calls to a correct plan. Without: 30+ undirected calls and still exploring.
+
 ---
 
 ## 📈 Maturity Model
@@ -171,17 +171,17 @@ ACF is designed to be adopted incrementally. Start at Level 1 and progress as yo
 > **Before invoking the agent**, make sure you have copied the relevant folder from this repo into the **root of your repo/project** (see Quick Start above). The agent file must be present at the root for your AI tool to detect it.
 
 ### Claude Code
-Install Claude Code. Copy `.claude/agents/` into your repo root. The `acf-context-agent` will then be available by name in chat.
+Install Claude Code. Copy `.claude/agents/` into your repo root. Invoke the agent using the `@acf-context-agent` prefix.
 
 ### Gemini CLI
-Install Gemini CLI. Copy `.gemini/agents/` into your repo root. Invoke the agent using the `acf-context-agent` name.
+Install Gemini CLI. Copy `.gemini/agents/` into your repo root. Invoke the agent using the `@acf-context-agent` prefix.
 
 ### GitHub Copilot
 - **VS Code:** Install the GitHub Copilot and GitHub Copilot Chat extensions. Copy `.github/agents/` into your repo root. In the chat panel, select `acf-context-agent` from the agent list.
 - **CLI:** Install GitHub Copilot in the CLI. Copy `.github/agents/` into your repo root. Invoke the agent using the `acf-context-agent` name.
 
 ### Codex
-Install Codex CLI. Copy `.codex/agents/` into your repo root. The agent is loaded automatically.
+Install Codex CLI. Copy `.codex/agents/` into your repo root. Invoke the agent using the `@acf-context-agent` prefix.
 
 ### Cursor
 Install Cursor. Copy `.cursor/agents/` into your repo root. Select `acf-context-agent` from the agent list.
