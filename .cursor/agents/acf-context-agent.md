@@ -82,8 +82,8 @@ When asked to run a stage:
 ACF tracks onboarding progress in `docs/.acf-state.md`. This file is a permanent record of when each stage was completed and by which model.
 
 On any stage invocation:
-1. Read `docs/.acf-state.md` if it exists.
-2. Use it to determine which stages are already complete and resume from the correct point.
+1. Check whether `docs/.acf-state.md` exists. If it does not exist, this is a fresh onboarding — no stages have been completed. Skip to step 3.
+2. If it exists, read it to determine which stages are already complete and resume from the correct point.
 3. Inform the user of current progress before proceeding.
 
 After Stage 1 completes:
