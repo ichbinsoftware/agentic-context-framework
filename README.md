@@ -139,14 +139,14 @@ When AI agents help migrate or modernise legacy systems, the biggest risk isn't 
 
 ## 📈 Maturity Model
 
-ACF is designed to be adopted incrementally. Start at Level 1 and progress as your team grows confidence:
+ACF is designed to be adopted incrementally. Run Stages 1-4 to reach Level 1, then progress as your team embeds the discipline:
 
 | Level | State | Characteristics |
 | :--- | :--- | :--- |
 | **0** | **Ad Hoc** | No agent context. AI tools generating generic, often incorrect code. High rework rate. Developers lose trust in the tooling. |
-| **1** | **Basic** | Instructions only (`AGENTS.md`). Agents follow core conventions. Common mistakes reduced but agents still lack system understanding. |
-| **2** | **Informed** | Instructions + Docs. Architecture docs provide the system map. Agents generate structurally correct code. Onboarding time drops for both humans and AI. |
-| **3** | **Trusted** | **Full ACF.** Instructions + Docs + ADC. Agents respect past decisions, follow patterns, and flag risk triggers. Rework drops. Autonomous agentic workflows become viable. |
+| **1** | **Onboarded** | Stages 1-4 complete. Agents have architecture docs, instructions, and retrieval discipline. Structurally correct code. Common mistakes reduced. Onboarding time drops for both humans and AI. |
+| **2** | **Practicing** | Team runs Stage 5 periodically and creates ADCs for significant changes. Agents respect past decisions and flag risk triggers. Rework drops. |
+| **3** | **Trusted** | Full ADC discipline embedded in workflow. Autonomous agentic workflows become viable. |
 
 > **Pro-Tip:** Add an "ACF Check" to your project's PR template to ensure consistent context maintenance:
 > `- [ ] Does this change warrant an ADC? (See docs/adc/README.md)`
@@ -272,6 +272,9 @@ No. All generated docs are plain markdown files versioned in your repo. They are
 
 **Does this work with monorepos?**
 Yes. Run the `acf-context-agent` stages from the root of each project or service you want to document. The docs and ADCs live within that project's folder structure.
+
+**How does ACF relate to spec-driven development tools?**
+They're complementary. ACF provides the architectural context layer — it tells agents how the codebase works, what conventions to follow, and what constraints exist. Spec-driven tools provide the change layer — they tell agents what to build next. ACF runs first: without it, an agent executing a spec knows *what* to change but not *how this codebase works*. With both, agents understand the system and receive structured work orders against it.
 
 ---
 
