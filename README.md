@@ -24,7 +24,8 @@ It treats agent context as a first-class engineering artefact: versioned in the 
 | **Architecture Docs** | High-level system maps, service boundaries, and deep-dive documentation | `docs/` |
 | **Agent Decision Context (ADC)** | Decision records and execution plans that capture the "why" behind the code | `docs/adc/` |
 
-A 50-line architecture doc costs far fewer tokens than an agent scanning 20 source files to infer the same information.
+A single architecture doc costs far fewer tokens than an agent scanning 30+ source files to infer the same information.
+
 ---
 
 ## 🚀 Quick Start
