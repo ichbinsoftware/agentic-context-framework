@@ -285,7 +285,7 @@ Contributions are welcome. If you've used ACF on a real project and found gaps, 
 
 **To contribute:**
 
-1. Fork the repository and create a branch from `main`
+1. Clone the repository and create a branch from `main`
 2. Make your changes — keep them focused and minimal
 3. Open a pull request with a clear description of what changed and why
 4. For significant changes to the agent instructions or framework structure, include a brief rationale in the PR description
