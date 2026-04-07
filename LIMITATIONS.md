@@ -6,7 +6,7 @@ ACF is a useful framework, but it has limitations worth understanding before you
 
 ## The framework is only as good as what the agent can infer
 
-Stage 1 (Onboard) asks the `acf-context-agent` to scan your repository and produce an accurate architecture overview. If your codebase is inconsistent, undocumented, or structurally messy, the generated docs will reflect that. A well-structured document describing a poorly-structured system is better than nothing — but it's not the force multiplier the framework promises.
+Stage 1 (Onboard) asks the `acf-context-agent` to scan your repository and produce an accurate architecture overview. If your codebase is inconsistent, undocumented, or structurally messy, the generated docs will reflect that. Verification stages (1.5 and 3.5) catch factual errors, but they can't fix structural confusion in the source.
 
 **What this means in practice:** Run Stage 1 on a reasonably coherent codebase. If your repo is in poor shape, consider a basic cleanup before onboarding.
 
@@ -20,11 +20,23 @@ The generated `AGENTS.md` tells agents when to create an ADC and how to do it. W
 
 ---
 
-## The Review stage (Stage 4) requires an independent perspective
+## Verification stages reduce errors but don't eliminate them
 
-Stage 4 asks you to review the generated documentation without anchoring to the assumptions of the agent that wrote it. The original design required a different model entirely, but the real requirement is independence — not a specific provider.
+The pipeline includes verification stages (1.5 Verify, 3.5 Audit) that catch most factual errors before Stage 4. Stage 4 (Review) catches what survives. In practice, Stage 4 corrections are reliably genuine — false positives are rare.
 
-In practice, a fresh session with the same model eliminates confirmation bias — the model can no longer validate what it previously wrote — and is sufficient for most teams. Switching to a different provider (Gemini, GPT-4o, etc.) gives maximum independence but is optional.
+However, certain error classes persist through all verification:
+
+- **Convention inference** — the model assumes common framework behavior (e.g., "merge overwrites") when the actual behavior differs. These are training-data biases, not carelessness.
+- **Behavioral inference** — the model describes how code *should* work based on method names rather than reading the implementation.
+- **"True but incomplete"** — a claim that is technically correct but misleadingly narrow (e.g., "runs ruff" when 22 pre-commit hooks run).
+
+These errors are caught by Stage 4 reliably. They cannot be eliminated by adding more instructions to the spec — they are model limitations.
+
+**What this means in practice:** Always run Stage 4. The verification stages (1.5, 3.5) are valuable but not sufficient alone. Stage 4 in a fresh session is the final safety net.
+
+## Stage 4 requires a fresh session
+
+Stage 4 asks you to review the generated documentation without anchoring to the assumptions of the agent that wrote it. A fresh session with the same model eliminates confirmation bias — the model can no longer validate what it previously wrote — and is sufficient for most teams. Switching to a different provider gives maximum independence but is optional.
 
 **What this means in practice:** Start a new conversation and run Stage 4 from there. This costs nothing and removes confirmation bias. A different provider is better, but a fresh session is good enough.
 
@@ -55,7 +67,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: 'ACF Stage 5: Check for architectural drift',
-              body: 'Scheduled reminder to run `Stage 5: Update` and check for documentation drift.\n\nRun this in your AI tool: `@acf-context-agent Run Stage 5: Update`',
+              body: 'Scheduled reminder to run `Stage 5: Update` and check for documentation drift.\n\nOpen your AI tool and invoke the `acf-context-agent` with: `Run Stage 5: Update`',
               labels: ['documentation']
             });
 ```

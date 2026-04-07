@@ -52,3 +52,7 @@ ACF is markdown in your repo. It works with Claude Code, GitHub Copilot, Gemini 
 - There is no buy-in from the team — one person maintaining ADCs for a team that ignores them is wasted effort
 - AI agents are only used for trivial, low-risk tasks where context doesn't affect output quality
 - There is no capacity to run Stage 5 periodically — docs will drift and erode trust in the framework
+
+---
+
+For a deeper look at the technical constraints, error classes that survive verification, and the maintenance burden of running ACF in practice, see [LIMITATIONS.md](LIMITATIONS.md).
