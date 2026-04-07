@@ -2,35 +2,29 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Organisations are investing heavily in AI coding tools and agentic DevOps workflows, but getting inconsistent results. The tools are powerful, but they're working blind.
-
-AI agents don't understand your architecture, your team's conventions, or why you made the decisions you made. Without this context, they generate code that works but doesn't fit — leading to rework, architectural drift, and eroded trust in the tooling.
+AI agents don't understand your architecture, your conventions, or why you made the decisions you made. Without this context, they generate code that works but doesn't fit.
 
 **The missing layer isn't better models. It's better context.**
 
-The Agentic Context Framework (ACF) is a structured approach to providing AI agents with the architectural knowledge, guardrails, and decision history they need to generate code that fits your system — not just code that works.
-
-It treats agent context as a first-class engineering artefact: versioned in the repo, maintained alongside the code, and reviewed in every PR.
-
-> Before adopting ACF, read [WHEN-ACF-WORKS.md](WHEN-ACF-WORKS.md) to understand where it delivers and where it doesn't. See [LIMITATIONS.md](LIMITATIONS.md) for an honest account of its gaps.
+ACF is a structured approach to providing AI agents with the architectural knowledge, guardrails, and decision history they need to generate code that fits your system — not just code that works. It treats agent context as a first-class engineering artefact: versioned in the repo, maintained alongside the code, and reviewed in every PR.
 
 ---
 
-## 🏛️ The Three Pillars of ACF
+## The Three Pillars
 
 | Pillar | What it is | Where it lives |
 | :--- | :--- | :--- |
-| **Agent Instructions** | Generated, repo-specific architectural boundaries, naming conventions, and risk triggers that require human review | `AGENTS.md` |
+| **Agent Instructions** | Generated, repo-specific architectural boundaries, conventions, and risk triggers | `AGENTS.md` |
 | **Architecture Docs** | High-level system maps, service boundaries, and deep-dive documentation | `docs/` |
 | **Agent Decision Context (ADC)** | Decision records and execution plans that capture the "why" behind the code | `docs/adc/` |
 
-A single architecture doc costs far fewer tokens than an agent scanning 30+ source files to infer the same information.
-
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-**1. Copy the platform-specific directory** for your AI tool into the **root of your repo/project**:
+Clone or download this repo first — the steps below assume you have a local copy to copy files from.
+
+**1. Copy the folder** for your AI tool into your repo root:
 
 | Tool | Copy this folder |
 | :--- | :--- |
@@ -40,272 +34,150 @@ A single architecture doc costs far fewer tokens than an agent scanning 30+ sour
 | Codex | `.codex/agents/` |
 | Cursor | `.cursor/agents/` |
 
-You only need the folder for the tool(s) you use.
+**2. Run the pipeline** — pick one:
 
-**2. Run Stage 1** in your AI tool's chat interface:
+**Automated (recommended):** Copy the runner script for your tool from `scripts/` to your repo root and run it:
 
-> "Run Stage 1: Onboard"
+```bash
+./acf-run-claude.sh
+```
 
-**3. Follow the stages in order** (1–4) for initial setup.
+| Tool | Script |
+| :--- | :--- |
+| Claude Code | `scripts/acf-run-claude.sh` |
+| Codex | `scripts/acf-run-codex.sh` |
+| GitHub Copilot | `scripts/acf-run-copilot.sh` |
+| Gemini CLI | `scripts/acf-run-gemini.sh` |
 
-**4. After Stage 4 is complete**, copy `docs/adc/` from this repo into your project's `docs/` folder. This provides the ADC template (`_TEMPLATE.md`), plan template, and retrieval policy that agents and developers use when recording decisions going forward.
+The script runs all 6 stages in sequence with model switching between generation and verification stages, each in a fresh session.
 
-**5. Schedule Stage 5** to keep docs current. Stage 5 is the only maintenance path — Stages 1–4 are not re-run. Treat it like a dependency update cycle: schedule it after significant sprints or releases rather than relying on memory. Wire it into your sprint cadence or CI schedule if possible.
+**Manual:** Run Stage 1, then follow the stages (1 → 1.5 → 2 → 3 → 3.5 → 4). Each verification stage should run in a fresh session.
 
-> **ACF is a collaboration, not a generation-and-forget workflow.** Agents generate the baseline from code. Humans bring the context that code can't express — business constraints, tribal knowledge, regulatory requirements, and the reasoning behind legacy decisions. Review and enrich the generated docs at each stage before moving on.
+> `Run Stage 1: Onboard`
+
+**3. After Stage 4**, copy `docs/adc/` from this repo into your project's `docs/` folder for the ADC templates.
+
+**4. Schedule Stage 5** after significant releases to keep docs current.
+
+> **ACF is a collaboration.** Agents generate the baseline from code. Humans bring the context that code can't express — business constraints, tribal knowledge, and the reasoning behind legacy decisions. Review and enrich the docs at each stage before moving on.
+
+See [SETUP.md](SETUP.md) for detailed per-tool setup instructions.
 
 ---
 
-## 🤖 The `acf-context-agent` Workflow
+## The `acf-context-agent` Workflow
 
-The `acf-context-agent` automates the generation and maintenance of all three pillars through a 5-stage lifecycle:
+The `acf-context-agent` is the engine behind ACF. It generates, verifies, and maintains your documentation through a structured pipeline of stages. Each stage runs as a single prompt — you invoke the agent, tell it which stage to run, and it does the rest.
+
+AI agents generate useful documentation, but they make predictable errors — wrong counts, fabricated identifiers, behavioral assumptions from training data. Even the best models routinely fail to follow complex instructions perfectly.
+
+ACF doesn't try to make the generator perfect. It catches what the generator gets wrong through dedicated verification stages that run in fresh sessions — where the model can't confirm its own mistakes.
 
 ```mermaid
 graph TD
-    A[Stage 1: Onboard] --> B[Stage 2: Instructions]
-    B --> C[Stage 3: DeepDive]
-    C --> D[Stage 4: Review]
+    A["Stage 1: Onboard"] --> A5["Stage 1.5: Verify"]
+    A5 --> B["Stage 2: Instructions"]
+    B --> C["Stage 3: DeepDive"]
+    C --> C5["Stage 3.5: Audit"]
+    C5 --> D["Stage 4: Review"]
     D --> E((Ready for Tasks))
-    E --- F[Stage 5: Update]
+    E --- F["Stage 5: Update"]
     F -.->|Periodic Maintenance| E
+
+    style A fill:#4a9eff,color:#fff
+    style B fill:#4a9eff,color:#fff
+    style C fill:#4a9eff,color:#fff
+    style A5 fill:#f5a623,color:#fff
+    style C5 fill:#f5a623,color:#fff
+    style D fill:#22c55e,color:#fff
+    style F fill:#8b5cf6,color:#fff
 ```
 
-| Platform | Invocation |
+### Generation stages
+
+| Stage | What it does | Output |
+| :--- | :--- | :--- |
+| **1. Onboard** | Scans the repo — project layout, entrypoints, technologies, cross-cutting concerns, testing approach | `docs/ARCHITECTURE-OVERVIEW.md` (10 required sections) |
+| **2. Instructions** | Generates repo-specific conventions, build commands, architecture rules, and a **Retrieval Discipline** — a numbered procedure that tells agents exactly how to load context for this repo | `AGENTS.md` + platform pointer file |
+| **3. DeepDive** | Creates detailed docs for every complex area (Auth, Database, Messaging, etc.) with verbatim code quotes for critical methods | `docs/*.md` (one per topic) |
+
+### Verification stages
+
+| Stage | What it does | Why a fresh session |
+| :--- | :--- | :--- |
+| **1.5. Verify** | Verifies every claim in `ARCHITECTURE-OVERVIEW.md` against source — names, counts, behaviors, type classifications | Models can't separate what they "know" from what they just wrote. A fresh verifier catches errors a same-session one confirms. |
+| **3.5. Audit** | Verifies all documents against source. Cross-references across docs for consistency. Catches errors from Stages 2-3. | Same reason — prevents confirmation bias from the generation stages. |
+| **4. Review** | Independent review — ideally a different model. Audits behavioral claims, cross-document consistency, and link integrity. Consistently catches errors that survived earlier stages. | Maximum independence. A different provider gives the strongest guarantee. A fresh session with the same model is sufficient for most teams. |
+
+### Maintenance
+
+| Stage | What it does |
 | :--- | :--- |
-| Claude Code | `@acf-context-agent Run Stage 1: Onboard` |
-| Gemini CLI | `@acf-context-agent Run Stage 1: Onboard` |
-| Cursor | Select `acf-context-agent` from the agent picker, then: `Run Stage 1: Onboard` |
-| GitHub Copilot | Select `acf-context-agent` from the agent list, then: `Run Stage 1: Onboard` |
-| Codex | `@acf-context-agent Run Stage 1: Onboard` |
+| **5. Update** | Periodic maintenance. Re-reads source, detects architectural drift, updates all docs. Incorporates ADC decisions into deep-dives. Schedule after significant releases. |
 
-### 1. Onboard
-`Run Stage 1: Onboard`
+### How it runs
 
-Scans the repository to produce a high-level "map of the system" in `docs/ARCHITECTURE-OVERVIEW.md`. Identifies entry points, key technologies, architectural styles, and cross-cutting concerns.
+- **State tracking:** The agent tracks progress in `docs/.acf-state.md` — a checklist of completed stages with dates and model IDs. If a session is interrupted, the agent resumes from the last checkpoint.
+- **Fresh sessions required:** Verification stages (1.5, 3.5, 4) must each run in a new session to prevent confirmation bias. Generation stages (1, 2, 3) can run back-to-back.
+- **No delegation:** Document content is always generated in the main conversation thread, not by subagents. This ensures the highest-capability model writes every claim.
+- **Self-correcting:** Each verification stage corrects errors immediately and logs them in a corrections table appended to `docs/.acf-state.md`.
 
-### 2. Instructions
-`Run Stage 2: Instructions`
-
-Generates repo-specific instruction files (`AGENTS.md` and a platform-specific pointer file). Includes a **Retrieval Discipline** section that tells AI agents exactly how to incrementally load context for this specific repo.
-
-### 3. DeepDive
-`Run Stage 3: DeepDive`
-
-Sequentially generates detailed documentation for every complex area identified during Onboard (e.g., Auth, Message Processing, Database Schema).
-
-### 4. Review
-`Run Stage 4: Review`
-
-Audits the generated documentation against the actual codebase using a different model, identifying gaps, inconsistencies, or unverified claims. A model reviewing its own output exhibits confirmation bias — a different model brings genuine independence.
-
-### 5. Update *(Maintenance)*
-`Run Stage 5: Update`
-
-A recurring stage designed to be run weeks or months later. Scans for "architectural drift" by comparing source code and new ADC records against existing documentation, ensuring your AI context never goes out of date.
+> **Why three layers of verification?** Generation alone produces documentation that is often *plausible* but not always *accurate*. Stages 1.5 and 3.5 catch most factual errors. Stage 4 catches what survives. Each layer compounds the reliability of the final output.
 
 ---
 
-## 📋 Agent Decision Context (ADC)
+## Agent Decision Context (ADC)
 
-Architecture docs explain *what* the system is. ADCs explain *why* it is that way — what changed, why, what was rejected, what it affects, and how to deploy and roll back safely.
+Architecture docs explain *what* the system is. ADCs explain *why* — what changed, why, what was rejected, what it affects, and how to deploy and roll back safely.
 
-Each ADC has two parts:
+- **ADC Record** (`docs/adc/`) — the decision and its context
+- **Execution Plan** (`docs/adc/plans/`) — optional step-by-step implementation
 
-- **ADC Record** (`docs/adc/`) — the decision and its context: motivation, approach, alternatives rejected, impact, and rollout.
-- **Execution Plan** (`docs/adc/plans/`) — optional step-by-step implementation sequence tied to that decision.
-
-ADCs are referenced in code comments and PR descriptions. Agents only read them when explicitly needed — not by default.
-
-See the included example:
-- [`adc-example/docs/adc/2026-02-27--external-user-entity.md`](adc-example/docs/adc/2026-02-27--external-user-entity.md)
-- [`adc-example/docs/adc/plans/2026-02-27--external-user-entity-service.plan.md`](adc-example/docs/adc/plans/2026-02-27--external-user-entity-service.plan.md)
+See the included example: [`adc-example/docs/adc/2026-02-27--external-user-entity.md`](adc-example/docs/adc/2026-02-27--external-user-entity.md)
 
 ---
 
-## 💡 Why This Matters
+## Why This Matters
 
-### For AI Coding Tools
-Most teams stop at "install the extension and run a workshop." ACF is what comes after — the structural investment that turns a productivity tool into a force multiplier. It's the difference between a developer with access to Stack Overflow and one who's been properly onboarded.
+**For AI Coding Tools** — Without context, agents scan 30+ files to infer what a single architecture doc could tell them. With ACF, agents read docs first, then make targeted source reads — cutting token usage and improving accuracy. [See it in action.](ACF-VS-NO-ACF-COMPARISON.md)
 
-### For Agentic DevOps
-As AI agents move from code suggestions to autonomous task execution — raising PRs, resolving incidents, migrating systems — the stakes increase dramatically. An agent operating without architectural context isn't just unhelpful, it's dangerous. ACF is a prerequisite for safe, effective agentic workflows at scale.
+**For Agentic DevOps** — As agents move from suggestions to autonomous execution, an agent without architectural context isn't just unhelpful — it's dangerous. ACF is the safety layer.
 
-### For Legacy Modernisation
-When AI agents help migrate or modernise legacy systems, the biggest risk isn't the technology — it's the loss of institutional knowledge. ADCs capture the decisions embedded in legacy code ("this workaround exists because of a vendor limitation") before they're lost in translation.
+**For Legacy Modernisation** — ADCs capture the decisions embedded in legacy code before they're lost in translation.
 
-### See It In Action
-[ACF-VS-NO-ACF-COMPARISON.md](ACF-VS-NO-ACF-COMPARISON.md) — a side-by-side comparison of the same prompt, same repo, and same model with and without ACF. With ACF: ~15 targeted tool calls to a correct plan. Without: 30+ undirected calls and still exploring.
+> Not for every team — see [WHEN-ACF-WORKS.md](WHEN-ACF-WORKS.md) for where it fits and where it doesn't.
 
 ---
 
-## 📈 Maturity Model
-
-ACF is designed to be adopted incrementally. Run Stages 1-4 to reach Level 1, then progress as your team embeds the discipline:
+## Maturity Model
 
 | Level | State | Characteristics |
 | :--- | :--- | :--- |
-| **0** | **Ad Hoc** | No agent context. AI tools generating generic, often incorrect code. High rework rate. Developers lose trust in the tooling. |
-| **1** | **Onboarded** | Stages 1-4 complete. Agents have architecture docs, instructions, and retrieval discipline. Structurally correct code. Common mistakes reduced. Onboarding time drops for both humans and AI. |
-| **2** | **Practicing** | Team runs Stage 5 periodically and creates ADCs for significant changes. Agents respect past decisions and flag risk triggers. Rework drops. |
-| **3** | **Trusted** | Full ADC discipline embedded in workflow. Autonomous agentic workflows become viable. |
-
-> **Pro-Tip:** Add an "ACF Check" to your project's PR template to ensure consistent context maintenance:
-> `- [ ] Does this change warrant an ADC? (See docs/adc/README.md)`
+| **0** | Ad Hoc | No agent context. Generic, often incorrect code. High rework. |
+| **1** | Onboarded | Stages 1-4 complete. Structurally correct code. Common mistakes reduced. |
+| **2** | Practicing | Stage 5 runs periodically. ADCs created for significant changes. |
+| **3** | Trusted | Full ADC discipline. Autonomous agentic workflows become viable. |
 
 ---
 
-## 🎯 Benefits
+## Further Reading
 
-| Stakeholder | Benefit | Impact |
-| :--- | :--- | :--- |
-| **Developers** | Faster onboarding — read docs instead of reverse-engineering the codebase | New developers and agents start contributing sooner |
-| **Developers** | Prevents regression — explicit "why we didn't do X" records | Settled decisions stay settled |
-| **Teams** | Clear boundaries and shared context — agents follow deterministic rules, not inferred patterns | Less back-and-forth correction on AI-generated code |
-| **Teams** | Reduced rework — violations caught early, decisions respected | Problems caught before review, not after |
-| **Business** | Knowledge resilience — tribal knowledge becomes a documented asset | New team members inherit the reasoning, not just the code |
-| **Business** | Lower AI costs and tool-agnostic investment — structured docs instead of full codebase scans | Fewer tokens per request; works with any AI tool now and in future |
-
----
-
-## 🛠️ AI Tool Setup
-
-> **Before invoking the agent**, make sure you have copied the relevant folder from this repo into the **root of your repo/project** (see Quick Start above). The agent file must be present at the root for your AI tool to detect it.
-
-### Claude Code
-Install Claude Code. Copy `.claude/agents/` into your repo root. Invoke the agent using the `@acf-context-agent` prefix.
-
-### Gemini CLI
-Install Gemini CLI. Copy `.gemini/agents/` into your repo root. Invoke the agent using the `@acf-context-agent` prefix.
-
-### GitHub Copilot
-- **VS Code:** Install the GitHub Copilot and GitHub Copilot Chat extensions. Copy `.github/agents/` into your repo root. In the chat panel, select `acf-context-agent` from the agent list.
-- **CLI:** Install GitHub Copilot in the CLI. Copy `.github/agents/` into your repo root. Invoke the agent using the `acf-context-agent` name.
-
-### Codex
-Install Codex CLI. Copy `.codex/agents/` into your repo root. Invoke the agent using the `@acf-context-agent` prefix.
-
-### Cursor
-Install Cursor. Copy `.cursor/agents/` into your repo root. Select `acf-context-agent` from the agent list.
+| Document | What it covers |
+| :--- | :--- |
+| [SETUP.md](SETUP.md) | Per-tool installation and invocation instructions |
+| [FAQ.md](FAQ.md) | Common questions about setup, stages, ADCs, and team adoption |
+| [WHEN-ACF-WORKS.md](WHEN-ACF-WORKS.md) | Where ACF delivers and where it doesn't |
+| [LIMITATIONS.md](LIMITATIONS.md) | Honest account of gaps and error classes |
+| [ACF-VS-NO-ACF-COMPARISON.md](ACF-VS-NO-ACF-COMPARISON.md) | Side-by-side comparison with and without ACF |
 
 ---
 
-## ❓ FAQ
+## Contributing
 
-### Setup
-
-**Do I need to copy all the agent folders or just one?**
-Just one — the folder for the AI tool you use. The others can be ignored.
-
-**What if my codebase is messy — will Stage 1 still produce useful output?**
-It depends on how messy. Stage 1 infers architecture from what it can find. If the codebase has no coherent structure, the output will reflect that. See [LIMITATIONS.md](LIMITATIONS.md) for an honest assessment.
-
-**Stage 2 generated a pointer file (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.) — do I need it?**
-Stage 2 generates a pointer file to `AGENTS.md` as a safe default. If your AI tool already reads `AGENTS.md` directly, the pointer file is redundant and you can safely delete it. Check your tool's documentation to confirm which files it reads on startup. **When in doubt, keep the pointer file—it ensures the agent is correctly anchored to your repository's rules.**
+Issues and discussion welcome. For changes beyond typos, open an issue first — ACF is intentionally lean and opinionated, and the bar for changes is real-world usage on a real codebase.
 
 ---
 
-### Existing Documentation
-
-**What if I already have an `AGENTS.md` or a `docs/` folder?**
-The `acf-context-agent` is opinionated and code-verified. It generates its own structure to ensure the Retrieval Discipline and ADC Policy are correctly implemented. Stage 2 will **overwrite** your existing `AGENTS.md`.
-
-**How do I reconcile my existing documentation with ACF?**
-1. **Backup:** Rename your existing `AGENTS.md` to `AGENTS.legacy.md`.
-2. **Generate:** Run Stages 1–3 to let the agent produce its code-verified baseline.
-3. **Manual Merge:** Copy your specific tribal knowledge (that isn't inferable from code) into the new `AGENTS.md`.
-4. **Review:** Run Stage 4. It will catch gaps between the generated docs and the codebase — but it won't automatically incorporate your old docs. Any remaining knowledge from your legacy files needs to be merged manually.
-
-**Why doesn't the agent just append to my existing files?**
-The documentation must be verified against the current codebase. Appending leads to stale instructions. Starting from a clean, code-verified generation ensures the context layer is accurate.
-
----
-
-### The Stages
-
-**Why do I need to switch models for Stage 4?**
-A model reviewing its own output exhibits confirmation bias — it validates what it wrote rather than challenges it. A different model from a different provider brings genuine independence. At minimum, start a fresh session so the model has no prior context from Stages 1–3. See [LIMITATIONS.md](LIMITATIONS.md) for more detail.
-
-**Do I need to run all stages in one session?**
-No. Each stage is designed to stop and wait for your instruction. You can run them across multiple sessions.
-
-**How often should I run Stage 5?**
-Treat it like a dependency update cycle — schedule it rather than relying on memory. After significant sprints or releases is a good default.
-
----
-
-### Retrieval Discipline
-
-**What is the Retrieval Discipline?**
-A section generated in `AGENTS.md` during Stage 2 that tells AI agents exactly how to incrementally load context for your specific repo — which files to read, in what order, and when to stop. It is generated from your actual codebase structure, so it reflects your real layers and terminology rather than generic advice. The goal is to prevent agents from scanning the entire codebase when only a small part is relevant to the task.
-
----
-
-### ADCs
-
-**What's the difference between an ADC and an ADR?**
-An ADR captures a decision — what was decided, why, and the consequences. An ADC captures the full context of a change — the decision is one part, but it also includes impact, rollout, rollback, and an optional linked execution plan. ADRs are backward-looking ("what we decided"). ADCs are both backward and forward-looking ("what we decided + how to execute it safely"). They're designed for both humans and selective AI agent retrieval.
-
-**When should I create an ADC vs just writing a code comment?**
-Code comments explain implementation detail. ADCs explain architectural decisions — why this approach over another, what was rejected, what the wider impact is. If the decision only makes sense in the context of that function, a comment is enough. If it affects patterns, contracts, or future architectural choices, create an ADC.
-
-**What if a developer makes a significant change without using an agent — will an ADC be created?**
-No. ADC creation is only automatic when an agent is doing the work. For human-authored changes, a PR review checklist is the most practical enforcement mechanism. See [LIMITATIONS.md](LIMITATIONS.md).
-
----
-
-### Team & Process
-
-**What if only some developers on my team use AI tools?**
-ACF still delivers value. The generated docs benefit all developers regardless of whether they use AI tools — clearer architecture docs and decision records help everyone. Adoption can be incremental.
-
-**How do I enforce ADC creation for human-authored changes?**
-There is no CI hook or automated enforcement. A PR review checklist is the most practical approach — reviewers check whether a significant change warrants an ADC before approving.
-
-**Do all developers need to install the same AI tool?**
-No. ACF is tool-agnostic. Multiple agent folders can coexist in the same repo — one developer can use Claude Code while another uses Cursor or Copilot. The generated docs are shared regardless of which tool produced them.
-
----
-
-### General
-
-**What if I switch AI tools — do I lose my docs?**
-No. All generated docs are plain markdown files versioned in your repo. They are not tied to any AI tool or platform.
-
-**Does this work with monorepos?**
-Yes. Run the `acf-context-agent` stages from the root of each project or service you want to document. The docs and ADCs live within that project's folder structure.
-
-**How does ACF relate to spec-driven development tools?**
-They're complementary. ACF provides the architectural context layer — it tells agents how the codebase works, what conventions to follow, and what constraints exist. Spec-driven tools provide the change layer — they tell agents what to build next. ACF runs first: without it, an agent executing a spec knows *what* to change but not *how this codebase works*. With both, agents understand the system and receive structured work orders against it.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome. If you've used ACF on a real project and found gaps, improvements, or new patterns worth capturing, please share them.
-
-**To contribute:**
-
-1. Clone the repository and create a branch from `main`
-2. Make your changes — keep them focused and minimal
-3. Open a pull request with a clear description of what changed and why
-4. For significant changes to the agent instructions or framework structure, include a brief rationale in the PR description
-
-**Good areas to contribute:**
-
-- Improvements to the `acf-context-agent` stages
-- Additional ecosystem examples for the Retrieval Discipline steps (new tech stacks, frameworks)
-- Corrections or improvements to the ADC template
-- Real-world ADC examples (anonymised) that would help illustrate the format
-
-**Please avoid:**
-
-- Generic documentation improvements without grounding in real usage
-- Adding new pillars or stages without strong justification — the framework is intentionally lean
-
-For bugs or questions, open an issue.
-
----
-
-## 📄 License
+## License
 
 MIT License. See [LICENSE](LICENSE) for details.
