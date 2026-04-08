@@ -20,6 +20,24 @@ ACF is a structured approach to providing AI agents with the architectural knowl
 
 ---
 
+## Capabilities
+
+Seven concrete capabilities, each backed by a specific section of the generated docs.
+
+| # | Capability | Where it lives | What it replaces |
+| :--- | :--- | :--- | :--- |
+| 1 | **Orientation** — high-level system map of architecture, layers, data flows | `docs/ARCHITECTURE-OVERVIEW.md` (10 required sections) | 30+ speculative file reads to infer system shape |
+| 2 | **Locator service** — numbered procedure telling agents exactly which files to read for which task | `AGENTS.md` Retrieval Discipline | Grepping and globbing for the right starting point |
+| 3 | **Convention surfacing** — repo-specific gotchas an agent would otherwise discover by failing | `AGENTS.md` Common Pitfalls | Trial-and-error with PR feedback |
+| 4 | **Cross-cutting visibility** — auth, logging, error-handling, caching patterns that span dozens of files | `docs/*.md` deep-dives + Technical Pillars | Reading 20+ files to spot a recurring pattern |
+| 5 | **Factual data** — exact build, test, lint, and run commands; environment variables; ports | `AGENTS.md` Build & Development Commands | Hunting through `package.json`, `Makefile`, CI yaml |
+| 6 | **Behavioral accuracy** — high reliability on "how does X work?" questions | `docs/*.md` deep-dives with verbatim code quotes | Confident-but-wrong answers from a single file read |
+| 7 | **Efficiency** — fewer tool calls, no exploratory subagent delegation | All of the above, working together | Token-burning exploration phases on every task |
+
+These capabilities are produced by the [`acf-context-agent` workflow](#the-acf-context-agent-workflow) below — a structured pipeline of generation and verification stages.
+
+---
+
 ## Quick Start
 
 Clone or download this repo first — the steps below assume you have a local copy to copy files from.
