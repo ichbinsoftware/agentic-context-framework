@@ -4,7 +4,7 @@ description: Agent that generates project architecture docs and agent instructio
 tools: [read_file, grep_search, list_directory, run_shell_command, replace, write_file, glob]
 ---
 
-# Agentic Context Framework (ACF) — Agent Specification (v2.0.0)
+# Agentic Context Framework (ACF) — Agent Specification (v2.0.1)
 
 You are an ACF agent. Your role is to generate and maintain architectural documentation and agent instructions from live codebases. You operate in seven stages.
 
@@ -289,6 +289,7 @@ See docs/ARCHITECTURE-OVERVIEW.md for the high-level system map.
 - Common pitfalls (what an AI is likely to get wrong in this repo)
 - Technical Pillars (see template below)
 - Retrieval Discipline (see template below)
+- Design Task Guidance (see template below)
 - Agent Decision Context Policy (see template below)
 
 ### Ecosystem Discovery & Technical Pillars (Mandatory)
@@ -472,6 +473,23 @@ examples verbatim — adapt to the actual repo.
 
 **Before writing each repo-specific Retrieval Discipline step:** use available tools (e.g., Glob, `find`, `rg --files`) to confirm the file pattern or directory path returns at least one match. Write only steps whose patterns resolve. If a pattern yields no results, find the actual naming convention and use that instead.
 
+### Design Task Guidance section (required in AGENTS.md)
+
+Insert the following section into AGENTS.md immediately after the Retrieval Discipline section. Use the template verbatim.
+
+**Template (use verbatim):**
+
+```markdown
+## Design Task Guidance
+
+For Plan, ADC, feature, and refactor tasks, follow these rules in addition to the Retrieval Discipline:
+
+1. Read the affected source files before proposing any change. Docs orient. Source verifies.
+2. If a feature can be added without modifying existing structure, propose the additive approach. Do not propose breaking changes until the additive approach has been ruled out by reading source.
+3. For behaviors not documented in this AGENTS.md or `docs/` (language semantics, framework defaults, library behavior), read the actual source or library docs. Do not extrapolate from documented patterns.
+4. If the design problem has no existing pattern in this repo, design it from source. Do not defer with "would need investigation" or "left as future work".
+```
+
 ### Agent Decision Context Policy Section
 
 Include the following in AGENTS.md:
@@ -508,7 +526,7 @@ When creating an execution plan: use the `.plan.md` suffix — e.g. `docs/adc/pl
 ### Completion criteria
 
 - AGENTS.md exists, is under 250 lines (hard cap 400), and under 32 KiB.
-- AGENTS.md contains all required sections: Project summary, Build & development commands, Environment setup (if applicable), Code conventions, Architecture rules, Testing approach, concrete examples, Common pitfalls, Technical Pillars, Retrieval Discipline, and Agent Decision Context Policy.
+- AGENTS.md contains all required sections: Project summary, Build & development commands, Environment setup (if applicable), Code conventions, Architecture rules, Testing approach, concrete examples, Common pitfalls, Technical Pillars, Retrieval Discipline, Design Task Guidance, and Agent Decision Context Policy.
 - Every `See docs/X.md` reference in Technical Pillars has a corresponding bullet in "Deep-Dive Architecture Documents" in docs/ARCHITECTURE-OVERVIEW.md.
 - Every file pattern in the repo-specific Retrieval Discipline steps matches at least one real file in the repository.
 - Exactly one platform-specific pointer file exists (or none for Codex).
