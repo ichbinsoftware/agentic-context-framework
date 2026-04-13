@@ -31,8 +31,8 @@ Seven concrete capabilities, each backed by a specific section of the generated 
 | 3 | **Convention surfacing** — repo-specific gotchas an agent would otherwise discover by failing | `AGENTS.md` Common Pitfalls | Trial-and-error with PR feedback |
 | 4 | **Cross-cutting visibility** — auth, logging, error-handling, caching patterns that span dozens of files | `docs/*.md` deep-dives + Technical Pillars | Reading 20+ files to spot a recurring pattern |
 | 5 | **Factual data** — exact build, test, lint, and run commands; environment variables; ports | `AGENTS.md` Build & Development Commands | Hunting through `package.json`, `Makefile`, CI yaml |
-| 6 | **Behavioral accuracy** — high reliability on "how does X work?" questions | `docs/*.md` deep-dives with verbatim code quotes | Confident-but-wrong answers from a single file read |
-| 7 | **Efficiency** — fewer tool calls, no exploratory subagent delegation | All of the above, working together | Token-burning exploration phases on every task |
+| 6 | **Behavioral accuracy** — high reliability on "how does X work?" questions ([measured](BENCHMARK-ACCURACY.md)) | `docs/*.md` deep-dives with verbatim code quotes | Confident-but-wrong answers from a single file read |
+| 7 | **Efficiency** — fewer tool calls, no exploratory subagent delegation ([measured](BENCHMARK-TASKS.md)) | All of the above, working together | Token-burning exploration phases on every task |
 
 These capabilities are produced by the [`acf-context-agent` workflow](#the-acf-context-agent-workflow) below — a structured pipeline of generation and verification stages.
 
@@ -157,13 +157,23 @@ See the included example: [`adc-example/docs/adc/2026-02-27--external-user-entit
 
 ## Why This Matters
 
-**For AI Coding Tools** — Without context, agents scan 30+ files to infer what a single architecture doc could tell them. With ACF, agents read docs first, then make targeted source reads — cutting token usage and improving accuracy. [See it in action.](ACF-VS-NO-ACF-COMPARISON.md)
+**For AI Coding Tools** — Without context, agents scan 30+ files to infer what a single architecture doc could tell them. With ACF, agents read docs first, then make targeted source reads — [cutting token usage](BENCHMARK-TASKS.md) and [improving accuracy](BENCHMARK-ACCURACY.md).
 
 **For Agentic DevOps** — As agents move from suggestions to autonomous execution, an agent without architectural context isn't just unhelpful — it's dangerous. ACF is the safety layer.
 
 **For Legacy Modernisation** — ADCs capture the decisions embedded in legacy code before they're lost in translation.
 
 > Not for every team — see [WHEN-ACF-WORKS.md](WHEN-ACF-WORKS.md) for where it fits and where it doesn't.
+
+---
+
+## Evidence
+
+Same model, same prompts, same repos — measured with and without ACF docs in place.
+
+- **Task performance** — 17 open-source repos across 9 languages. ACF wins on 15/17 (88% significant). Median 60–70% fewer tool calls to reach a correct plan. [BENCHMARK-TASKS.md](BENCHMARK-TASKS.md)
+- **Documentation accuracy** — unguided LLM docs average 27 factual errors per repo. ACF's verification cascade reduces that by 88% before Stage 4, and corrects the remainder before ship. [BENCHMARK-ACCURACY.md](BENCHMARK-ACCURACY.md)
+- **Design quality** — side-by-side design task on a Go hexagonal repo: without ACF the agent designs from the pattern; with ACF it designs from the source — reading the schema, connecting to existing entities, offering a domain-aware alternative. [DESIGN-QUALITY-COMPARISON.md](DESIGN-QUALITY-COMPARISON.md)
 
 ---
 
@@ -187,6 +197,9 @@ See the included example: [`adc-example/docs/adc/2026-02-27--external-user-entit
 | [WHEN-ACF-WORKS.md](WHEN-ACF-WORKS.md) | Where ACF delivers and where it doesn't |
 | [LIMITATIONS.md](LIMITATIONS.md) | Honest account of gaps and error classes |
 | [ACF-VS-NO-ACF-COMPARISON.md](ACF-VS-NO-ACF-COMPARISON.md) | Side-by-side comparison with and without ACF |
+| [BENCHMARK-TASKS.md](BENCHMARK-TASKS.md) | Agent task performance across 17 repos — ACF vs no ACF |
+| [BENCHMARK-ACCURACY.md](BENCHMARK-ACCURACY.md) | Documentation accuracy — 462 baseline errors vs ACF's verification cascade |
+| [DESIGN-QUALITY-COMPARISON.md](DESIGN-QUALITY-COMPARISON.md) | Side-by-side: what a design task looks like with ACF vs without |
 
 ---
 
